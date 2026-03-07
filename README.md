@@ -1,16 +1,42 @@
-# nmpc_acados_px4_cpp
+# NMPC for PX4-ROS2 Deployment (C++)
+![Status](https://img.shields.io/badge/Status-Hardware_Validated-blue)
+[![ROS 2 Compatible](https://img.shields.io/badge/ROS%202-Humble-blue)](https://docs.ros.org/en/humble/index.html)
+[![PX4 Compatible](https://img.shields.io/badge/PX4-Autopilot-pink)](https://github.com/PX4/PX4-Autopilot)
+[![evannsmc.com](https://img.shields.io/badge/evannsmc.com-Project%20Page-blue)](https://www.evannsmc.com/projects)
 
-C++ port of [`nmpc_acados_px4`](../nmpc_acados_px4/README.md) — NMPC for quadrotors using the [Acados](https://docs.acados.org/) solver. Same Euler-state formulation, error-based cost, and wrapped yaw error, implemented in C++ against the Acados C API.
+C++ port of [`nmpc_acados_px4`](https://github.com/evannsm/nmpc_acados_px4) — NMPC for quadrotors using the [Acados](https://docs.acados.org/) solver. Same Euler-state formulation, error-based cost, and wrapped yaw error as the Python package, implemented in C++ against the Acados C API.
 
-> **Critical:** The Python package must be run at least once before you can build this package. The Python run generates the C solver code that this package compiles against. If you skip this step, `colcon build` will fail with a clear error message.
+This package was created during a PhD at Georgia Tech's FACTSLab as a high-performance C++ counterpart to the Python NMPC baseline used for comparisons against Newton-Raphson Flow controllers.
 
----
+> **Critical:** The Python package must be run at least once before building this package. The Python run generates the C solver code that this package compiles against. If you skip this step, `colcon build` will fail with a clear error message.
+
+## Key Features
+
+- **Acados C API** — links directly against the generated C solver for minimal overhead
+- **Dual-timer control loop** — decouples MPC solve latency from the publish rate via a 50-step control buffer
+- **Error-state cost formulation** — references passed as stage-wise parameters, not embedded in the cost
+- **Input constraints** — hard bounds on thrust `[0, 27] N` and body rates `[-0.8, 0.8] rad/s`
+- **PX4 integration** — publishes attitude setpoints and offboard commands via `px4_msgs`
+- **Structured logging** — optional CSV logging via ROS2Logger_cpp
+
+## MPC Formulation
+
+| Parameter | Value |
+|-----------|-------|
+| State | 9D `[x, y, z, vx, vy, vz, roll, pitch, yaw]` |
+| Control | 4D `[thrust (N), p, q, r (rad/s)]` |
+| Horizon | 2.0 s, N=50 steps, dt=0.04 s |
+| Solver | SQP_RTI, PARTIAL_CONDENSING_HPIPM, ERK |
+| Cost type | NONLINEAR_LS, error-based |
+| Yaw error | `atan2(sin(yaw−yaw_ref), cos(yaw−yaw_ref))` |
+| Thrust bounds | `[0, 27] N` |
+| Rate bounds | `[−0.8, 0.8] rad/s` |
 
 ## Build Order (Do This First)
 
 ### Step 1 — Generate the Acados C solver (Python)
 
-The C++ package links against a shared library that is produced by the Python package's code-generation step. This only needs to be done once (or whenever the MPC formulation changes).
+The C++ package links against a shared library produced by the Python package's code-generation step. This only needs to be done once (or whenever the MPC formulation changes).
 
 ```bash
 source install/setup.bash
@@ -26,12 +52,12 @@ The node will print:
 [acados] Done! Control stack should begin in two seconds...
 ```
 
-Then press `Ctrl+C` to stop it. The generated files are now at:
+Press `Ctrl+C` to stop. The generated files are now at:
 
 ```
 src/nmpc_acados_px4/nmpc_acados_px4_utils/controller/nmpc/acados_generated_files/
 └── holybro_euler_err_mpc_c_generated_code/
-    ├── acados_solver_holybro_euler_err.h   ← C++ includes this
+    ├── acados_solver_holybro_euler_err.h          ← C++ includes this
     ├── libacados_ocp_solver_holybro_euler_err.so  ← C++ links against this
     └── ...
 ```
@@ -56,11 +82,9 @@ Run the Python package first to generate the acados C solver.
 ros2 run nmpc_acados_px4_cpp run_node --platform sim --trajectory helix --spin
 ```
 
----
-
 ## Rebuilding After MPC Formulation Changes
 
-If you modify `acados_model.py` or `generate_nmpc.py` in the Python package (e.g., change weights, horizon, or constraints), the generated C code is stale. You must regenerate:
+If you modify `acados_model.py` or `generate_nmpc.py` in the Python package (e.g., change weights, horizon, or constraints), the generated C code is stale. Regenerate:
 
 ```bash
 # Force regeneration by deleting the old files
@@ -74,8 +98,6 @@ ros2 run nmpc_acados_px4 run_node --platform sim --trajectory hover --hover-mode
 colcon build --packages-select nmpc_acados_px4_cpp
 source install/setup.bash
 ```
-
----
 
 ## Usage
 
@@ -106,8 +128,6 @@ ros2 run nmpc_acados_px4_cpp run_node --platform hw --trajectory helix --spin --
 
 **Trajectories:** `hover`, `yaw_only`, `circle_horz`, `circle_vert`, `fig8_horz`, `fig8_vert`, `helix`, `sawtooth`, `triangle`
 
----
-
 ## Architecture
 
 ### Two-timer control loop
@@ -128,36 +148,48 @@ t=0         t=10s              t=10+flight_period    t=10+flight_period+10s
    position     body-rate ctrl     position setpoint    descend
 ```
 
-### MPC formulation (mirrors Python package)
+## Package Structure
 
-| Parameter | Value |
-|-----------|-------|
-| State | 9D `[x, y, z, vx, vy, vz, roll, pitch, yaw]` |
-| Control | 4D `[thrust (N), p, q, r (rad/s)]` |
-| Horizon | 2.0 s, N=50 steps, dt=0.04 s |
-| Solver | SQP_RTI, PARTIAL_CONDENSING_HPIPM, ERK |
-| Cost type | NONLINEAR_LS, error-based |
-| Yaw error | `atan2(sin(yaw−yaw_ref), cos(yaw−yaw_ref))` |
-| Thrust bounds | `[0, 27] N` |
-| Rate bounds | `[−0.8, 0.8] rad/s` |
-
----
+```
+nmpc_acados_px4_cpp/
+├── CMakeLists.txt
+├── package.xml
+├── include/nmpc_acados_px4_cpp/
+│   ├── nmpc_solver.hpp              # Acados solver wrapper class
+│   ├── offboard_control_node.hpp    # ROS 2 node class
+│   ├── px4_utils/
+│   │   ├── core_funcs.hpp           # PX4 interface helpers
+│   │   └── flight_phases.hpp        # Flight phase state machine
+│   └── transformations/
+│       └── adjust_yaw.hpp           # Yaw wrapping utilities
+└── src/
+    ├── nmpc_solver.cpp              # Acados C API solver implementation
+    ├── offboard_control_node.cpp    # ROS 2 node (subscriptions, publishers, control loop)
+    └── run_node.cpp                 # CLI entry point and argument parsing
+```
 
 ## Dependencies
 
-- [quad_platforms_cpp](../quad_platforms_cpp/) — platform mass and throttle mapping
-- [quad_trajectories_cpp](../quad_trajectories_cpp/) — trajectory definitions and autodiff velocities
-- [ROS2Logger_cpp](../ROS2Logger_cpp/) — CSV logging
+- [quad_platforms_cpp](https://github.com/evannsm/quad_platforms_cpp) — platform mass and throttle mapping
+- [quad_trajectories_cpp](https://github.com/evannsm/quad_trajectories_cpp) — trajectory definitions and autodiff velocities
+- [ROS2Logger_cpp](https://github.com/evannsm/ROS2Logger_cpp) — CSV logging
 - [px4_msgs](https://github.com/PX4/px4_msgs) — PX4 message types
+- [nmpc_acados_px4](https://github.com/evannsm/nmpc_acados_px4) — Python package for C solver code generation
 - Eigen3
-- [Acados](https://docs.acados.org/) — installed at `/home/egmc/acados/`
-- `nmpc_acados_px4` (Python package) — for code generation
+- [Acados](https://docs.acados.org/) — installed at `~/acados/`
 
----
+## Installation
+
+```bash
+# Inside a ROS 2 workspace src/ directory
+git clone git@github.com:evannsm/nmpc_acados_px4_cpp.git
+# Run the Python package first to generate the Acados C solver (see Build Order above)
+cd .. && colcon build --packages-select nmpc_acados_px4_cpp
+```
 
 ## Acados Installation
 
-If Acados is not yet installed, follow the [Python package README](../nmpc_acados_px4/README.md#acados-setup) for the full setup steps, or the quick summary below.
+If Acados is not yet installed, follow the [Python package README](https://github.com/evannsm/nmpc_acados_px4#acados-setup) for the full setup steps, or the quick summary below.
 
 ```bash
 git clone https://github.com/acados/acados.git ~/acados
@@ -173,4 +205,25 @@ export ACADOS_SOURCE_DIR=$HOME/acados
 ```
 
 Download the `t_renderer` binary from [tera_renderer releases](https://github.com/acados/tera_renderer/releases/), place it at `~/acados/bin/t_renderer`, and `chmod +x` it.
-# nmpc_acados_px4_cpp
+
+## Papers and Repositories
+
+American Control Conference 2024 — [paper](https://coogan.ece.gatech.edu/papers/pdf/cuadrado2024tracking.pdf)
+| [Personal repo](https://github.com/evannsm/MoralesCuadrado_ACC2024)
+| [FACTSLab repo](https://github.com/gtfactslab/MoralesCuadrado_Llanes_ACC2024)
+
+Transactions on Control Systems Technology 2025 — [paper](https://arxiv.org/abs/2508.14185)
+| [Personal repo](https://github.com/evannsm/MoralesCuadrado_Baird_TCST2025)
+| [FACTSLab repo](https://github.com/gtfactslab/Baird_MoralesCuadrado_TRO_2025)
+
+Transactions on Robotics 2025
+| [Personal repo](https://github.com/evannsm/MoralesCuadrado_Baird_TCST2025)
+| [FACTSLab repo](https://github.com/gtfactslab/MoralesCuadrado_Baird_TCST2025)
+
+## License
+
+MIT
+
+## Website
+
+This project is part of the [evannsmc open-source portfolio](https://www.evannsmc.com/projects).
