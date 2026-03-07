@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>nmpc_acados_px4_cpp</name>
+  <version>0.1.0</version>
+  <description>C++ NMPC controller for quadrotor using acados — Euler-state, wrapped yaw error.
+    Mirrors nmpc_acados_px4 (Python). Requires the Python package to be run first
+    to generate the acados C solver code.</description>
+  <maintainer email="user@example.com">user</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>rclcpp</depend>
+  <depend>px4_msgs</depend>
+  <depend>eigen3_cmake_module</depend>
+  <depend>quad_platforms_cpp</depend>
+  <depend>quad_trajectories_cpp</depend>
+  <depend>ros2_logger_cpp</depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
