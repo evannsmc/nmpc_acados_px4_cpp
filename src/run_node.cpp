@@ -41,6 +41,7 @@ static std::string generate_log_filename(const Args& args) {
     std::string name = qp::platform_type_to_string(args.platform);
     name += "_nmpc_acados_px4_";
     name += qt::trajectory_type_to_string(args.trajectory);
+    if (args.feedforward)   name += "_ff";
     name += args.double_speed ? "_2x" : "_1x";
     if (args.short_variant) name += "_short";
     if (args.spin)          name += "_spin";

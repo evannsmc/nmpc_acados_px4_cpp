@@ -116,7 +116,7 @@ OffboardControlNode::OffboardControlNode(
             "platform", "controller", "trajectory",
             "traj_double", "traj_short", "traj_spin",
             // Timing
-            "time", "traj_time", "ref_time", "comptime",
+            "time", "traj_time", "ref_time", "comp_time",
             // State
             "x", "y", "z", "yaw", "vx", "vy", "vz",
             // Reference

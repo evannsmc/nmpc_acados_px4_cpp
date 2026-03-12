@@ -15,6 +15,7 @@ This package was created during a PhD at Georgia Tech's FACTSLab as a high-perfo
 - **Acados C API** — links directly against the generated C solver for minimal overhead
 - **Dual-timer control loop** — decouples MPC solve latency from the publish rate via a 50-step control buffer
 - **Error-state cost formulation** — references passed as stage-wise parameters, not embedded in the cost
+- **Differential-flatness feedforward** — `--ff` flag enables full feedforward state+control for `f8_contraction` via `autodiff::real3rd`
 - **Input constraints** — hard bounds on thrust `[0, 27] N` and body rates `[-0.8, 0.8] rad/s`
 - **PX4 integration** — publishes attitude setpoints and offboard commands via `px4_msgs`
 - **Structured logging** — optional CSV logging via ros2_logger_cpp
@@ -107,9 +108,16 @@ ros2 run nmpc_acados_px4_cpp run_node --platform sim --trajectory circle_horz
 ros2 run nmpc_acados_px4_cpp run_node --platform sim --trajectory helix --spin --double-speed
 ros2 run nmpc_acados_px4_cpp run_node --platform sim --trajectory fig8_vert --short
 
+# Figure-8 contraction (no feedforward)
+ros2 run nmpc_acados_px4_cpp run_node --platform sim --trajectory f8_contraction
+
+# Figure-8 contraction with differential-flatness feedforward
+ros2 run nmpc_acados_px4_cpp run_node --platform sim --trajectory f8_contraction --ff
+
 # Hardware with logging
 ros2 run nmpc_acados_px4_cpp run_node --platform hw --trajectory circle_horz --log
 ros2 run nmpc_acados_px4_cpp run_node --platform hw --trajectory helix --spin --log --log-file my_run
+ros2 run nmpc_acados_px4_cpp run_node --platform hw --trajectory f8_contraction --ff --log
 ```
 
 ### CLI Options
@@ -122,11 +130,29 @@ ros2 run nmpc_acados_px4_cpp run_node --platform hw --trajectory helix --spin --
 | `--double-speed` | 2× trajectory speed |
 | `--short` | Short variant (fig8_vert only) |
 | `--spin` | Enable yaw rotation (circle_horz, helix) |
+| `--ff` | Differential-flatness feedforward (only valid with `f8_contraction`) |
 | `--flight-period SEC` | Override default duration (sim: 30 s, hw: 60 s) |
 | `--log` | Enable CSV data logging |
 | `--log-file NAME` | Custom log filename stem (requires `--log`) |
 
-**Trajectories:** `hover`, `yaw_only`, `circle_horz`, `circle_vert`, `fig8_horz`, `fig8_vert`, `helix`, `sawtooth`, `triangle`
+**Trajectories:** `hover`, `yaw_only`, `circle_horz`, `circle_vert`, `fig8_horz`, `fig8_vert`, `helix`, `sawtooth`, `triangle`, `f8_contraction`
+
+## Feedforward for `f8_contraction`
+
+Pass `--ff` to enable differential-flatness feedforward when running the `f8_contraction` trajectory.
+
+**How it works:**
+
+1. `generate_feedforward_trajectory` (in `quad_trajectories_cpp`) evaluates `flat_to_x_u` at each of the `N` horizon time steps.
+2. `flat_to_x_u` uses a single `autodiff::real3rd` forward pass to recover all derivatives up to 3rd order from the trajectory function, then computes:
+   - Velocity `[vx, vy, vz]` (1st derivative)
+   - Specific thrust `f = sqrt(ax² + ay² + (az - g)²)` and Euler angles `[phi, th, psi]` (from 2nd derivatives)
+   - `u_ff = [df, dphi, dth, dpsi]` via chain rule on the 3rd derivatives (jerk)
+3. The NMPC reference is updated per stage:
+   - **Euler reference** columns 6–7 (`roll_ref`, `pitch_ref`) are replaced with the feedforward `[phi, th]` instead of zeros — the NMPC tracks the physically correct attitude the trajectory demands.
+   - **Control reference** `u_ref = [F (N), p, q, r]` is computed by converting `[dphi, dth, dpsi]` to body rates via the inverse ZYX Euler kinematic matrix, and passed as the stage parameter instead of hover thrust.
+
+This gives the NMPC a fully consistent reference in both state and control space rather than treating every stage as a hover equilibrium.
 
 ## Architecture
 
