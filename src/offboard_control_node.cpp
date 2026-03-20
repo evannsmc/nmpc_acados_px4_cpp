@@ -90,12 +90,6 @@ OffboardControlNode::OffboardControlNode(
         [this](const px4_msgs::msg::RcChannels::SharedPtr msg) {
             rc_channel_callback(msg);
         });
-    battery_status_sub_ = create_subscription<px4_msgs::msg::BatteryStatus>(
-        "/fmu/out/battery_status", qos,
-        [this](const px4_msgs::msg::BatteryStatus::SharedPtr msg) {
-            battery_status_callback(msg);
-        });
-
     // ── NMPC solver ──────────────────────────────────────────────────────
     double hover_thrust = platform_->mass() * 9.806;
     RCLCPP_INFO(get_logger(), "[NMPC] Creating solver (N=%d, Tf=%.1f s)...", NUM_STEPS, HORIZON);
@@ -221,13 +215,6 @@ void OffboardControlNode::rc_channel_callback(
     offboard_mode_rc_switch_on_ = (msg->channels[mode_channel_ - 1] >= 0.75f);
 }
 
-void OffboardControlNode::battery_status_callback(
-    const px4_msgs::msg::BatteryStatus::SharedPtr msg)
-{
-    if (msg->voltage_v > 10.0f)
-        current_voltage_ = msg->voltage_v;
-}
-
 // ============================================================================
 // Flight phase helpers
 // ============================================================================
@@ -351,9 +338,6 @@ void OffboardControlNode::publish_control_timer_callback()
                 double yaw_rate  = control_buffer_(buffer_index_, 3);
 
                 double throttle = platform_->get_throttle_from_force(thrust_N);
-                // Battery compensation (4S LiPo)
-                if (current_voltage_ > 14.0)
-                    throttle *= 1.0 - 0.0779 * (current_voltage_ - 16.0);
 
                 normalized_input_ = {throttle, roll_rate, pitch_rate, yaw_rate};
                 publish_rates_setpoint(throttle, roll_rate, pitch_rate, yaw_rate);

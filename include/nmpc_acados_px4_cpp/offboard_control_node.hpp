@@ -8,7 +8,6 @@
 #include <px4_msgs/msg/vehicle_status.hpp>
 #include <px4_msgs/msg/vehicle_odometry.hpp>
 #include <px4_msgs/msg/rc_channels.hpp>
-#include <px4_msgs/msg/battery_status.hpp>
 
 #include <Eigen/Dense>
 #include <memory>
@@ -58,8 +57,6 @@ private:
     void vehicle_odometry_callback(const px4_msgs::msg::VehicleOdometry::SharedPtr msg);
     void vehicle_status_callback(const px4_msgs::msg::VehicleStatus::SharedPtr msg);
     void rc_channel_callback(const px4_msgs::msg::RcChannels::SharedPtr msg);
-    void battery_status_callback(const px4_msgs::msg::BatteryStatus::SharedPtr msg);
-
     // ── Timer callbacks ──────────────────────────────────────────────────
     void offboard_mode_timer_callback();
     void publish_control_timer_callback();
@@ -102,8 +99,6 @@ private:
     rclcpp::Subscription<px4_msgs::msg::VehicleOdometry>::SharedPtr vehicle_odometry_sub_;
     rclcpp::Subscription<px4_msgs::msg::VehicleStatus>::SharedPtr   vehicle_status_sub_;
     rclcpp::Subscription<px4_msgs::msg::RcChannels>::SharedPtr      rc_channels_sub_;
-    rclcpp::Subscription<px4_msgs::msg::BatteryStatus>::SharedPtr   battery_status_sub_;
-
     // ── Timers ───────────────────────────────────────────────────────────
     rclcpp::TimerBase::SharedPtr offboard_timer_;
     rclcpp::TimerBase::SharedPtr publish_control_timer_;
@@ -126,8 +121,6 @@ private:
     bool in_land_mode_            = false;
     bool offboard_mode_rc_switch_on_;
     int  mode_channel_            = 5;
-
-    double current_voltage_ = 16.8;   ///< 4S LiPo nominal [V]
 
     // ── Flight phase timing ──────────────────────────────────────────────
     std::chrono::steady_clock::time_point T0_;
