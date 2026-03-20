@@ -94,7 +94,7 @@ private:
     bool spin_;
     bool logging_enabled_;
     std::string log_file_;
-    bool feedforward_ = false;  ///< Differential-flatness feedforward (f8_contraction only)
+    bool feedforward_ = false;  ///< Differential-flatness feedforward (fig8_contraction only)
 
     std::unique_ptr<quad_platforms_cpp::PlatformConfig> platform_;
 
@@ -157,7 +157,7 @@ private:
     int  buffer_index_ = 0;
     bool buffer_valid_ = false;
 
-    // ── Feedforward (differential flatness, f8_contraction only) ─────────
+    // ── Feedforward (differential flatness, fig8_contraction only) ─────────
     NmpcCtrlMat u_ff_traj_  = NmpcCtrlMat::Zero();  ///< [F(N), p, q, r] per stage
     bool        u_ff_valid_ = false;
 

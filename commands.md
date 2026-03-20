@@ -61,10 +61,10 @@ ros2 run nmpc_acados_px4_cpp run_node --platform sim --trajectory triangle
 ros2 run nmpc_acados_px4_cpp run_node --platform sim --trajectory triangle --double-speed
 
 # Figure-8 Contraction (no feedforward)
-ros2 run nmpc_acados_px4_cpp run_node --platform sim --trajectory f8_contraction
+ros2 run nmpc_acados_px4_cpp run_node --platform sim --trajectory fig8_contraction
 
 # Figure-8 Contraction with differential-flatness feedforward
-ros2 run nmpc_acados_px4_cpp run_node --platform sim --trajectory f8_contraction --ff
+ros2 run nmpc_acados_px4_cpp run_node --platform sim --trajectory fig8_contraction --ff
 ```
 
 ---
@@ -87,8 +87,8 @@ ros2 run nmpc_acados_px4_cpp run_node --platform hw --trajectory helix
 ros2 run nmpc_acados_px4_cpp run_node --platform hw --trajectory helix --double-speed
 
 # Figure-8 Contraction
-ros2 run nmpc_acados_px4_cpp run_node --platform hw --trajectory f8_contraction
-ros2 run nmpc_acados_px4_cpp run_node --platform hw --trajectory f8_contraction --ff
+ros2 run nmpc_acados_px4_cpp run_node --platform hw --trajectory fig8_contraction
+ros2 run nmpc_acados_px4_cpp run_node --platform hw --trajectory fig8_contraction --ff
 ```
 
 ---
@@ -107,13 +107,13 @@ ros2 run nmpc_acados_px4_cpp run_node \
   --spin \
   --log
 
-# Auto-generated filename: sim_nmpc_acados_px4_f8_contraction_ff_1x_cpp.csv
-ros2 run nmpc_acados_px4_cpp run_node --platform sim --trajectory f8_contraction --ff --log
+# Auto-generated filename: sim_nmpc_acados_px4_fig8_contraction_ff_1x_cpp.csv
+ros2 run nmpc_acados_px4_cpp run_node --platform sim --trajectory fig8_contraction --ff --log
 
 # Hardware with custom filename
 ros2 run nmpc_acados_px4_cpp run_node \
   --platform hw \
-  --trajectory f8_contraction \
+  --trajectory fig8_contraction \
   --ff \
   --log \
   --log-file my_f8_ff_run
@@ -126,12 +126,12 @@ ros2 run nmpc_acados_px4_cpp run_node \
 | Argument           | Required | Values | Description |
 | ------------------ | -------- | ------ | ----------- |
 | `--platform`       | Yes      | `sim`, `hw` | Platform type |
-| `--trajectory`     | Yes      | `hover`, `yaw_only`, `circle_horz`, `circle_vert`, `fig8_horz`, `fig8_vert`, `helix`, `sawtooth`, `triangle`, `f8_contraction` | Trajectory type |
+| `--trajectory`     | Yes      | `hover`, `yaw_only`, `circle_horz`, `circle_vert`, `fig8_horz`, `fig8_vert`, `helix`, `sawtooth`, `triangle`, `fig8_contraction` | Trajectory type |
 | `--hover-mode`     | If hover | `1–8` (sim), `1–4` (hw) | Hover position |
 | `--double-speed`   | No       | flag | Use 2× trajectory speed |
 | `--short`          | No       | flag | Short `fig8_vert` variant |
 | `--spin`           | No       | flag | Enable yaw rotation |
-| `--ff`             | No       | flag | Differential-flatness feedforward (only valid with `f8_contraction`) |
+| `--ff`             | No       | flag | Differential-flatness feedforward (only valid with `fig8_contraction`) |
 | `--flight-period`  | No       | seconds | Override default duration (sim: 30 s, hw: 60 s) |
 | `--log`            | No       | flag | Enable data logging |
 | `--log-file`       | No       | string | Custom log filename (no extension) |
