@@ -4,7 +4,7 @@
 [![PX4 Compatible](https://img.shields.io/badge/PX4-Autopilot-pink)](https://github.com/PX4/PX4-Autopilot)
 [![evannsmc.com](https://img.shields.io/badge/evannsmc.com-Project%20Page-blue)](https://www.evannsmc.com/projects)
 
-C++ port of [`nmpc_acados_px4`](https://github.com/evannsm/nmpc_acados_px4) — NMPC for quadrotors using the [Acados](https://docs.acados.org/) solver. Same Euler-state formulation, error-based cost, and wrapped yaw error as the Python package, implemented in C++ against the Acados C API.
+C++ port of [`nmpc_acados_px4`](https://github.com/evannsmc/nmpc_acados_px4) — NMPC for quadrotors using the [Acados](https://docs.acados.org/) solver. Same Euler-state formulation, error-based cost, and wrapped yaw error as the Python package, implemented in C++ against the Acados C API.
 
 This package was created during a PhD at Georgia Tech's FACTSLab as a high-performance C++ counterpart to the Python NMPC baseline used for comparisons against Newton-Raphson Flow controllers.
 
@@ -192,11 +192,11 @@ nmpc_acados_px4_cpp/
 
 ## Dependencies
 
-- [quad_platforms_cpp](https://github.com/evannsm/quad_platforms_cpp) — platform mass and throttle mapping
-- [quad_trajectories_cpp](https://github.com/evannsm/quad_trajectories_cpp) — trajectory definitions and autodiff velocities
-- [ros2_logger_cpp](https://github.com/evannsm/ROS2Logger_cpp) — CSV logging
+- [quad_platforms_cpp](https://github.com/evannsmc/quad_platforms_cpp) — platform mass and throttle mapping
+- [quad_trajectories_cpp](https://github.com/evannsmc/quad_trajectories_cpp) — trajectory definitions and autodiff velocities
+- [ros2_logger_cpp](https://github.com/evannsmc/ROS2Logger_cpp) — CSV logging
 - [px4_msgs](https://github.com/PX4/px4_msgs) — PX4 message types
-- [nmpc_acados_px4](https://github.com/evannsm/nmpc_acados_px4) — Python package for C solver code generation
+- [nmpc_acados_px4](https://github.com/evannsmc/nmpc_acados_px4) — Python package for C solver code generation
 - Eigen3
 - [Acados](https://docs.acados.org/) — installed at `~/acados/`
 
@@ -204,14 +204,14 @@ nmpc_acados_px4_cpp/
 
 ```bash
 # Inside a ROS 2 workspace src/ directory
-git clone git@github.com:evannsm/nmpc_acados_px4_cpp.git
+git clone git@github.com:evannsmc/nmpc_acados_px4_cpp.git
 # Run the Python package first to generate the Acados C solver (see Build Order above)
 cd .. && colcon build --packages-select nmpc_acados_px4_cpp
 ```
 
 ## Acados Installation
 
-If Acados is not yet installed, follow the [Python package README](https://github.com/evannsm/nmpc_acados_px4#acados-setup) for the full setup steps, or the quick summary below.
+If Acados is not yet installed, follow the [Python package README](https://github.com/evannsmc/nmpc_acados_px4#acados-setup) for the full setup steps, or the quick summary below.
 
 ```bash
 git clone https://github.com/acados/acados.git ~/acados
@@ -231,15 +231,15 @@ Download the `t_renderer` binary from [tera_renderer releases](https://github.co
 ## Papers and Repositories
 
 American Control Conference 2024 — [paper](https://coogan.ece.gatech.edu/papers/pdf/cuadrado2024tracking.pdf)
-| [Personal repo](https://github.com/evannsm/MoralesCuadrado_ACC2024)
+| [Personal repo](https://github.com/evannsmc/MoralesCuadrado_ACC2024)
 | [FACTSLab repo](https://github.com/gtfactslab/MoralesCuadrado_Llanes_ACC2024)
 
 Transactions on Control Systems Technology 2025 — [paper](https://arxiv.org/abs/2508.14185)
-| [Personal repo](https://github.com/evannsm/MoralesCuadrado_Baird_TCST2025)
+| [Personal repo](https://github.com/evannsmc/MoralesCuadrado_Baird_TCST2025)
 | [FACTSLab repo](https://github.com/gtfactslab/Baird_MoralesCuadrado_TRO_2025)
 
 Transactions on Robotics 2025
-| [Personal repo](https://github.com/evannsm/MoralesCuadrado_Baird_TCST2025)
+| [Personal repo](https://github.com/evannsmc/MoralesCuadrado_Baird_TCST2025)
 | [FACTSLab repo](https://github.com/gtfactslab/MoralesCuadrado_Baird_TCST2025)
 
 ## License
