@@ -390,7 +390,7 @@ void OffboardControlNode::compute_control_timer_callback()
         ctx.sim          = sim_;
         ctx.hover_mode   = hover_mode_;
         ctx.spin         = spin_;
-        ctx.double_speed = (trajectory_type_ == qt::TrajectoryType::FIG8_CONTRACTION)
+        ctx.double_speed = (trajectory_type_ == qt::TrajectoryType::FIG8_AKASH)
             ? false
             : double_speed_;
         ctx.short_variant= short_variant_;
