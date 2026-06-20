@@ -39,23 +39,42 @@ if(ACADOS_ROOT STREQUAL "")
     set(ACADOS_ROOT "/opt/acados")
 endif()
 
-# Path to the generated solver directory.
-# The Python package must be run FIRST to generate these files.
-#   ros2 run nmpc_acados_px4 run_node --platform sim --trajectory hover --hover-mode 1
-set(GENERATED_SOLVER_DIR
-    "${CMAKE_CURRENT_SOURCE_DIR}/../nmpc_acados_px4/nmpc_acados_px4_utils/controller/nmpc/acados_generated_files/holybro_euler_err_mpc_c_generated_code"
-    CACHE PATH "Directory produced by acados code generation (Python package)")
+# This package generates its OWN acados C solver at configure time by invoking
+# the codegen that ships in the sibling Python package (nmpc_acados_px4). No
+# manual pre-step is required: ensure_solver.py is stamp-cached, so it
+# regenerates only when the platform/mass/formulation changes and is otherwise
+# a fast no-op.
+set(NMPC_SOLVER_PLATFORM "sim" CACHE STRING
+    "Platform whose mass is baked into the generated acados solver (sim or hw)")
 
-# Fail early with a helpful message if the generated code is missing
+set(NMPC_PY_PKG_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../nmpc_acados_px4")
+set(GENERATED_SOLVER_DIR
+    "${NMPC_PY_PKG_DIR}/nmpc_acados_px4_utils/controller/nmpc/acados_generated_files/holybro_euler_err_mpc_c_generated_code"
+    CACHE PATH "Directory produced by acados code generation")
+
+find_program(NMPC_PYTHON3 NAMES python3 python REQUIRED)
+
+message(STATUS "[nmpc_acados_px4_cpp] Ensuring acados solver (platform=${NMPC_SOLVER_PLATFORM}) ...")
+execute_process(
+    COMMAND "${NMPC_PYTHON3}" "${NMPC_PY_PKG_DIR}/ensure_solver.py" --platform "${NMPC_SOLVER_PLATFORM}"
+    WORKING_DIRECTORY "${NMPC_PY_PKG_DIR}"
+    RESULT_VARIABLE NMPC_GEN_RESULT
+    OUTPUT_VARIABLE NMPC_GEN_OUT
+    ERROR_VARIABLE  NMPC_GEN_ERR)
+if(NOT NMPC_GEN_RESULT EQUAL 0)
+  message(FATAL_ERROR
+    "\n[nmpc_acados_px4_cpp] acados solver generation FAILED (platform=${NMPC_SOLVER_PLATFORM}).\n"
+    "  command: ${NMPC_PYTHON3} ${NMPC_PY_PKG_DIR}/ensure_solver.py --platform ${NMPC_SOLVER_PLATFORM}\n"
+    "  This step needs the Python package (nmpc_acados_px4) + acados_template importable\n"
+    "  (use the PX4-ROS2-Docker image).\n\n"
+    "  --- stdout ---\n${NMPC_GEN_OUT}\n  --- stderr ---\n${NMPC_GEN_ERR}\n")
+endif()
+message(STATUS "[nmpc_acados_px4_cpp] ${NMPC_GEN_OUT}")
+
 if(NOT EXISTS "${GENERATED_SOLVER_DIR}/acados_solver_holybro_euler_err.h")
   message(FATAL_ERROR
-    "\n[nmpc_acados_px4_cpp] Generated solver header not found at:\n"
-    "  ${GENERATED_SOLVER_DIR}/acados_solver_holybro_euler_err.h\n\n"
-    "Generate the solver first (inside Docker):\n"
-    "  cd /workspace && python3 src/nmpc_acados_px4/ensure_solver.py --platform sim\n"
-    "or use the root make target:\n"
-    "  make generate_nmpc_solver PLATFORM=sim\n"
-    "Then rebuild this package.\n")
+    "[nmpc_acados_px4_cpp] Solver header still missing after generation:\n"
+    "  ${GENERATED_SOLVER_DIR}/acados_solver_holybro_euler_err.h")
 endif()
 
 # ---------------------------------------------------------------------------

@@ -18,7 +18,7 @@ This package was created during a PhD at Georgia Tech's FACTSLab as a high-perfo
 **[<kbd> <br> MPC Formulation <br> </kbd>](#mpc-formulation)** 
 **[<kbd> <br> Architecture <br> </kbd>](#architecture)** 
 **[<kbd> <br> Usage <br> </kbd>](#usage)** 
-**[<kbd> <br> Feedforward <br> </kbd>](#feedforward-for-fig8_akash)** 
+**[<kbd> <br> Feedforward <br> </kbd>](#feedforward-for-fig8_contraction)** 
 **[<kbd> <br> Acados Setup <br> </kbd>](#acados-installation)** 
 **[<kbd> <br> Papers <br> </kbd>](#papers-and-repositories)** 
 
@@ -38,7 +38,7 @@ This package was created during a PhD at Georgia Tech's FACTSLab as a high-perfo
 - [Rebuilding After MPC Formulation Changes](#rebuilding-after-mpc-formulation-changes)
 - [Usage](#usage)
   - [CLI Options](#cli-options)
-- [Feedforward for `fig8_akash`](#feedforward-for-fig8_akash)
+- [Feedforward for `fig8_contraction`](#feedforward-for-fig8_contraction)
 - [Architecture](#architecture)
   - [Two-timer control loop](#two-timer-control-loop)
   - [Flight phases](#flight-phases)
@@ -57,7 +57,7 @@ This package was created during a PhD at Georgia Tech's FACTSLab as a high-perfo
 - **Acados C API** — links directly against the generated C solver for minimal overhead
 - **Dual-timer control loop** — decouples MPC solve latency from the publish rate via a 50-step control buffer
 - **Error-state cost formulation** — references passed as stage-wise parameters, not embedded in the cost
-- **Differential-flatness feedforward** — `--ff` flag enables full feedforward state+control for `fig8_akash` via `autodiff::real3rd`
+- **Differential-flatness feedforward** — `--ff` flag enables full feedforward state+control for `fig8_contraction` via `autodiff::real3rd`
 - **Input constraints** — hard bounds on thrust `[0, 27] N` and body rates `[-0.8, 0.8] rad/s`
 - **PX4 integration** — publishes attitude setpoints and offboard commands via `px4_msgs`
 - **Structured logging** — optional CSV logging via ros2_logger_cpp
@@ -152,16 +152,16 @@ ros2 run nmpc_acados_px4_cpp run_node --platform sim --trajectory circle_horz
 ros2 run nmpc_acados_px4_cpp run_node --platform sim --trajectory helix --spin --double-speed
 ros2 run nmpc_acados_px4_cpp run_node --platform sim --trajectory fig8_vert --short
 
-# fig8_akash (no feedforward)
-ros2 run nmpc_acados_px4_cpp run_node --platform sim --trajectory fig8_akash
+# fig8_contraction (no feedforward)
+ros2 run nmpc_acados_px4_cpp run_node --platform sim --trajectory fig8_contraction
 
-# fig8_akash with differential-flatness feedforward
-ros2 run nmpc_acados_px4_cpp run_node --platform sim --trajectory fig8_akash --ff
+# fig8_contraction with differential-flatness feedforward
+ros2 run nmpc_acados_px4_cpp run_node --platform sim --trajectory fig8_contraction --ff
 
 # Hardware with logging
 ros2 run nmpc_acados_px4_cpp run_node --platform hw --trajectory circle_horz --log
 ros2 run nmpc_acados_px4_cpp run_node --platform hw --trajectory helix --spin --log --log-file my_run
-ros2 run nmpc_acados_px4_cpp run_node --platform hw --trajectory fig8_akash --ff --log
+ros2 run nmpc_acados_px4_cpp run_node --platform hw --trajectory fig8_contraction --ff --log
 ```
 
 ### CLI Options
@@ -174,16 +174,16 @@ ros2 run nmpc_acados_px4_cpp run_node --platform hw --trajectory fig8_akash --ff
 | `--double-speed` | 2× trajectory speed |
 | `--short` | Short variant (fig8_vert only) |
 | `--spin` | Enable yaw rotation (circle_horz, helix) |
-| `--ff` | Differential-flatness feedforward (only valid with `fig8_akash`) |
+| `--ff` | Differential-flatness feedforward (only valid with `fig8_contraction`) |
 | `--flight-period SEC` | Override default duration (sim: 30 s, hw: 60 s) |
 | `--log` | Enable CSV data logging |
 | `--log-file NAME` | Custom log filename stem (requires `--log`) |
 
-**Trajectories:** `hover`, `yaw_only`, `circle_horz`, `circle_vert`, `fig8_horz`, `fig8_vert`, `helix`, `sawtooth`, `triangle`, `fig8_akash`
+**Trajectories:** `hover`, `yaw_only`, `circle_horz`, `circle_vert`, `fig8_horz`, `fig8_vert`, `helix`, `sawtooth`, `triangle`, `fig8_contraction`
 
-## Feedforward for `fig8_akash`
+## Feedforward for `fig8_contraction`
 
-Pass `--ff` to enable differential-flatness feedforward when running the `fig8_akash` trajectory.
+Pass `--ff` to enable differential-flatness feedforward when running the `fig8_contraction` trajectory.
 
 **How it works:**
 
