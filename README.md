@@ -19,7 +19,6 @@ This package was created during my PhD at Georgia Tech's FACTSLab as a high-perf
 **[<kbd> <br> MPC Formulation <br> </kbd>](#mpc-formulation)** 
 **[<kbd> <br> Architecture <br> </kbd>](#architecture)** 
 **[<kbd> <br> Usage <br> </kbd>](#usage)** 
-**[<kbd> <br> Feedforward <br> </kbd>](#feedforward-for-fig8_contraction)** 
 **[<kbd> <br> Acados Setup <br> </kbd>](#acados-installation)** 
 **[<kbd> <br> Papers <br> </kbd>](#papers-and-repositories)** 
 
@@ -39,7 +38,6 @@ This package was created during my PhD at Georgia Tech's FACTSLab as a high-perf
 - [Rebuilding After MPC Formulation Changes](#rebuilding-after-mpc-formulation-changes)
 - [Usage](#usage)
   - [CLI Options](#cli-options)
-- [Feedforward for `fig8_contraction`](#feedforward-for-fig8_contraction)
 - [Architecture](#architecture)
   - [Two-timer control loop](#two-timer-control-loop)
   - [Flight phases](#flight-phases)
@@ -176,23 +174,6 @@ ros2 run nmpc_acados_px4_cpp run_node --platform hw --trajectory fig8_contractio
 | `--log-file NAME` | Custom log filename stem (requires `--log`) |
 
 **Trajectories:** `hover`, `yaw_only`, `circle_horz`, `circle_vert`, `fig8_horz`, `fig8_vert`, `helix`, `sawtooth`, `triangle`, `fig8_contraction`
-
-## Feedforward for `fig8_contraction`
-
-Pass `--ff` to enable differential-flatness feedforward when running the `fig8_contraction` trajectory.
-
-**How it works:**
-
-1. `generate_feedforward_trajectory` (in `quad_trajectories_cpp`) evaluates `flat_to_x_u` at each of the `N` horizon time steps.
-2. `flat_to_x_u` uses a single `autodiff::real3rd` forward pass to recover all derivatives up to 3rd order from the trajectory function, then computes:
-   - Velocity `[vx, vy, vz]` (1st derivative)
-   - Specific thrust `f = sqrt(ax² + ay² + (az - g)²)` and Euler angles `[phi, th, psi]` (from 2nd derivatives)
-   - `u_ff = [df, dphi, dth, dpsi]` via chain rule on the 3rd derivatives (jerk)
-3. The NMPC reference is updated per stage:
-   - **Euler reference** columns 6–7 (`roll_ref`, `pitch_ref`) are replaced with the feedforward `[phi, th]` instead of zeros — the NMPC tracks the physically correct attitude the trajectory demands.
-   - **Control reference** `u_ref = [F (N), p, q, r]` is computed by converting `[dphi, dth, dpsi]` to body rates via the inverse ZYX Euler kinematic matrix, and passed as the stage parameter instead of hover thrust.
-
-This gives the NMPC a fully consistent reference in both state and control space rather than treating every stage as a hover equilibrium.
 
 ## Architecture
 
